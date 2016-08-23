@@ -61,8 +61,9 @@ def parse_args(input_string = None):
 
     parser.add_argument('-chp',
                         dest = 'percentiles_set',
-                        type = list,
+                        type = float,
                         default = None,
+                        nargs = '*',
                         help = 'Change default percentile set.')
 
     parser.add_argument('-of',
