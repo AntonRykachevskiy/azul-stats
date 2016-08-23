@@ -27,14 +27,6 @@ HEADER_SIZE = 12
 # TODO critical percentile value search
 
 
-def stdout_redirected(new_stdout):
-    save_stdout = sys.stdout
-    sys.stdout = new_stdout
-    try:
-        yield None
-    finally:
-        sys.stdout = save_stdout
-
 
 def parse_args(input_string = None):
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -78,6 +70,12 @@ def parse_args(input_string = None):
                         type = str,
                         default = None,
                         help = 'Output file name with path.')
+
+    parser.add_argument('-oi',
+                        dest = 'output_image',
+                        type = str,
+                        default = None,
+                        help = 'Output image name with path.')
 
 
 
@@ -267,8 +265,9 @@ def print_results(first_all_data,
     _name_checker(first_all_data, second_all_data)
 
     if not output_file is None:
-        with opened(output_file, "w") as f:
-            with stdout_redirected(f):
+        of = open(output_file, 'w')
+        stdout_backup = sys.stdout
+        sys.stdout = of
 
     for perc in PERCENTILES_SET:
         print "percentile value: {0}".format(perc)
@@ -290,10 +289,14 @@ def print_results(first_all_data,
 
     if VERBOUSE >= 3:
         print "\n"
-        print "{0] percentile values : ".format(first_name)
+        print "{0} percentile values : ".format(first_all_data['build_name'])
         print_percentiles_dict(first_all_data['percentiles_dict'])
-        print "{1} percentile values : ".format(second_name)
+        print "{0} percentile values : ".format(second_all_data['build_name'])
         print_percentiles_dict(second_all_data['percentiles_dict'])
+
+    if not output_file is None:
+        of.close()
+        sys.stdout = stdout_backup
 
 
 def whole_cycle(args, folder_name, build_name):
@@ -350,8 +353,10 @@ def plot_all(first_all_data, second_all_data, output_file = None):
     green_patch = mpatches.Patch(color='green', label=second_all_data['build_name'])
     axes[0].legend(handles=[red_patch,green_patch],prop={'size':10})
 
-
-    plt.show()
+    if output_file:
+        fig.savefig(output_file)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -369,7 +374,10 @@ if __name__ == "__main__":
 
         ks_test_resuts = ks_tests(first_all_data['cleared_percentiles_dict'], second_all_data['cleared_percentiles_dict'])
 
-        print_results(first_all_data, second_all_data, ks_test_resuts)
+        if VERBOUSE >= 1:
+           print_results(first_all_data, second_all_data, ks_test_resuts, None)
+
+        print_results(first_all_data, second_all_data, ks_test_resuts, args.output_file)
 
         if PLOT:
-            plot_all(first_all_data, second_all_data)
+            plot_all(first_all_data, second_all_data, args.output_image)
