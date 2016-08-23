@@ -16,7 +16,6 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-
 PERCENTILES_SET = [50, 90, 99, 99.9, 99.99]
 VERBOUSE = 0
 OUTLIERS_TREASHOLD = 0.8
@@ -24,67 +23,68 @@ PLOT = False
 HEADER_SIZE = 12
 
 
-# TODO critical percentile value search
-
-
-
-def parse_args(input_string = None):
+def parse_args(input_string=None):
     parser = argparse.ArgumentParser(description='Process some integers.')
-    
-    parser.add_argument('-if', 
-                        nargs = 2,
-                        dest = 'input_folders',
+
+    parser.add_argument('-if',
+                        nargs=2,
+                        dest='input_folders',
                         help='Two folders where data is strored, use space to separate them from each other.')
-                        
+
     parser.add_argument('-rq',
-                        dest = 'required_name_part',
-                        type = str,
-                        help = 'Required string in the name of the file.')
+                        dest='required_name_part',
+                        type=str,
+                        help='Required string in the name of the file.')
 
     parser.add_argument('-bn',
-                        dest = 'builds_names',
-                        type = str,
-                        nargs = 2,
-                        default= [None, None],
-                        help = 'Name of builds, use space to separate one from another.')
+                        dest='builds_names',
+                        type=str,
+                        nargs=2,
+                        default=[None, None],
+                        help='Name of builds, use space to separate one from another.')
 
     parser.add_argument('-v',
-                        dest = 'verbouse',
-                        type = int,
-                        default = 1,
-                        help = 'Verbousity level, should be 0, 1, 2, 3, where 0 is for no information and 2 is all posible information.')
+                        dest='verbouse',
+                        type=int,
+                        default=1,
+                        help='Verbousity level, should be 0, 1, 2, 3,'
+                             ' where 0 is for no information and 2 is all posible information.')
+
+    parser.add_argument('-ot',
+                        dest='outliers_treashold',
+                        type=float,
+                        default=1.0,
+                        help='Set outliers treashold. 1.0 - no outliers, 0.0 - every point is an outlier')
 
     parser.add_argument('-p',
-                        dest = 'plot',
-                        action = 'store_true',
-                        help = 'Plot percentile values.')
+                        dest='plot',
+                        action='store_true',
+                        help='Plot percentile values.')
 
     parser.add_argument('-chp',
-                        dest = 'percentiles_set',
-                        type = float,
-                        default = None,
-                        nargs = '*',
-                        help = 'Change default percentile set.')
+                        dest='percentiles_set',
+                        type=float,
+                        default=None,
+                        nargs='*',
+                        help='Change default percentile set.')
 
     parser.add_argument('-of',
-                        dest = 'output_file',
-                        type = str,
-                        default = None,
-                        help = 'Output file name with path.')
+                        dest='output_file',
+                        type=str,
+                        default=None,
+                        help='Output file name with path.')
 
     parser.add_argument('-oi',
-                        dest = 'output_image',
-                        type = str,
-                        default = None,
-                        help = 'Output image name with path.')
-
-
+                        dest='output_image',
+                        type=str,
+                        default=None,
+                        help='Output image name with path.')
 
     if input_string is None:
         args = parser.parse_args()
     else:
         args = parser.parse_args(input_string.split())
-    
+
     return args
 
 
@@ -103,7 +103,7 @@ def read_single(filename, filepath=None, fulfill_flag=True, header_size=HEADER_S
     if filepath:
         if filepath[-1] == '/':
             filename = filepath + filename
-        else: 
+        else:
             filename = filepath + '/' + filename
 
     f = open(filename, "r")
@@ -138,16 +138,16 @@ def __strings_in_string(string_list, base_string):
     return all(checks)
 
 
-def read_multiple(path, marks=None, fulfill_flag=True, header_size=HEADER_SIZE, verbouse = False):
+def read_multiple(path, marks=None, fulfill_flag=True, header_size=HEADER_SIZE, verbouse=False):
     pdfs = dict()
 
     for file_name in os.listdir(path):
         if (marks is not None and __strings_in_string(marks, file_name)) or (marks is None):
             x, curr_pdf = read_single(file_name, path, fulfill_flag=fulfill_flag, header_size=header_size)
             if fulfill_flag:
-                pdfs[file_name] = (curr_pdf)
+                pdfs[file_name] = curr_pdf
             else:
-                pdfs[file_name] = ((x, curr_pdf))
+                pdfs[file_name] = x, curr_pdf
 
             if verbouse:
                 print "loading : {0}".format(file_name)
@@ -158,8 +158,8 @@ def read_multiple(path, marks=None, fulfill_flag=True, header_size=HEADER_SIZE, 
     return pdfs
 
 
-def percentiles_from_pdf(pdf, perc, strat = 'first_higher'):
-    perc_normed = float(perc)/ 100
+def percentiles_from_pdf(pdf, perc, strat='first_higher'):
+    perc_normed = float(perc) / 100
     curr_perc = 0.0
 
     i = 0
@@ -190,15 +190,15 @@ def calculate_perc(pdfs):
     return percentiles_dict
 
 
-def drop_single_outliers(target_percentile_dict, threashold = OUTLIERS_TREASHOLD):
+def drop_single_outliers(target_percentile_dict, treashold=1):
     cleared_percentiles_dict = dict()
     dropped_percentiles_dict = dict()
 
     for run_name in target_percentile_dict:
-        mean = np.mean(filter(lambda x : x != target_percentile_dict[run_name], target_percentile_dict.values()))
-        std = np.std(filter(lambda x : x != target_percentile_dict[run_name], target_percentile_dict.values()))
+        mean = np.mean(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
+        std = np.std(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
 
-        interval = stats.norm.interval(threashold / 2.0 + 1 / 2.0, mean, std)
+        interval = stats.norm.interval(treashold / 2.0 + 1 / 2.0, mean, std)
 
         if target_percentile_dict[run_name] >= interval[0] and target_percentile_dict[run_name] <= interval[1]:
             cleared_percentiles_dict[run_name] = target_percentile_dict[run_name]
@@ -213,7 +213,8 @@ def drop_all_outliers(percentiles_dict):
     dropped_percentiles_dict = dict()
 
     for perc in PERCENTILES_SET:
-        cleared_percentiles_dict[perc], dropped_percentiles_dict[perc] = drop_single_outliers(percentiles_dict[perc])
+        cleared_percentiles_dict[perc], dropped_percentiles_dict[perc] = drop_single_outliers(percentiles_dict[perc],
+                                                                                              OUTLIERS_TREASHOLD)
 
     return cleared_percentiles_dict, dropped_percentiles_dict
 
@@ -226,7 +227,7 @@ def make_distributions(percentiles_dict):
         std = np.std(percentiles_dict[perc].values())
 
         normed_perc_values = [(perc_value - mean) / std for perc_value in
-                                            percentiles_dict[perc].values()]
+                              percentiles_dict[perc].values()]
 
         distributions_dict[perc] = stats.norm(mean, std)
 
@@ -239,7 +240,8 @@ def ks_tests(first_percentiles_dict, second_percentiles_dict):
     ks_tests_dict = dict()
 
     for perc in first_percentiles_dict:
-        ks_tests_dict[perc] = stats.ks_2samp(first_percentiles_dict[perc].values(), second_percentiles_dict[perc].values())
+        ks_tests_dict[perc] = stats.ks_2samp(first_percentiles_dict[perc].values(),
+                                             second_percentiles_dict[perc].values())
 
     return ks_tests_dict
 
@@ -261,8 +263,7 @@ def _name_checker(first_all_data, second_all_data):
 def print_results(first_all_data,
                   second_all_data,
                   ks_tests_dict,
-                  output_file = None):
-
+                  output_file=None):
     _name_checker(first_all_data, second_all_data)
 
     if not output_file is None:
@@ -276,16 +277,18 @@ def print_results(first_all_data,
                                                   first_all_data['distributions_dict'][0][perc].mean(),
                                                   first_all_data['distributions_dict'][0][perc].std())
         print "{0} mean and std: {1}, {2}".format(second_all_data['build_name'],
-                                                 second_all_data['distributions_dict'][0][perc].mean(),
-                                                 second_all_data['distributions_dict'][0][perc].std())
+                                                  second_all_data['distributions_dict'][0][perc].mean(),
+                                                  second_all_data['distributions_dict'][0][perc].std())
         print "Probability of being drown from different distr.: {0}".format(1 - ks_tests_dict[perc][1])
         if VERBOUSE >= 2:
             print "\n"
-            print "number of data points to compare: {0}, {1}".format(len(first_all_data['cleared_percentiles_dict'][perc].values()),
-                                                                  len(second_all_data['cleared_percentiles_dict'][perc].values()))
+            print "number of data points to compare: {0}, {1}".format(
+                len(first_all_data['cleared_percentiles_dict'][perc].values()),
+                len(second_all_data['cleared_percentiles_dict'][perc].values()))
             print "dropped runs names: {0}".format(first_all_data['dropped_percentiles_dict'][perc].keys())
             print "dropped runs names: {0}".format(second_all_data['dropped_percentiles_dict'][perc].keys())
-            print "KS_values : {0}, {1}".format(first_all_data['distributions_dict'][1][perc][1], second_all_data['distributions_dict'][1][perc][1])
+            print "KS_values : {0}, {1}".format(first_all_data['distributions_dict'][1][perc][1],
+                                                second_all_data['distributions_dict'][1][perc][1])
         print "---------------------------------------------------------------"
 
     if VERBOUSE >= 3:
@@ -308,29 +311,29 @@ def whole_cycle(args, folder_name, build_name):
 
     distributions_dict = make_distributions(cleared_percentiles_dict)
 
-    return {'pdfs' : pdfs,
-            'percentiles_dict' : percentiles_dict,
-            'cleared_percentiles_dict' : cleared_percentiles_dict,
-            'dropped_percentiles_dict' : dropped_percentiles_dict,
-            'distributions_dict' : distributions_dict,
-            'build_name' : build_name}
+    return {'pdfs': pdfs,
+            'percentiles_dict': percentiles_dict,
+            'cleared_percentiles_dict': cleared_percentiles_dict,
+            'dropped_percentiles_dict': dropped_percentiles_dict,
+            'distributions_dict': distributions_dict,
+            'build_name': build_name}
 
 
-def plot_percentile_distr(ax, distributions_dict, percentiles_dict, perc, color = None):
+def plot_percentile_distr(ax, distributions_dict, percentiles_dict, perc, color=None):
     mean = distributions_dict[perc].mean()
     std = distributions_dict[perc].std()
 
-    x_vals = np.linspace(mean - 3*std, mean + 3*std, 6*std)
+    x_vals = np.linspace(mean - 3 * std, mean + 3 * std, 6 * std)
     y_vals = distributions_dict[perc].pdf(x_vals)
 
     line = ax.plot(x_vals, y_vals, color=color)
-    ax.plot(percentiles_dict[perc].values(), [-max(y_vals) / 10 for _ in range(len(percentiles_dict[perc].values()))], 'o', color=color)
+    ax.plot(percentiles_dict[perc].values(), [-max(y_vals) / 10 for _ in range(len(percentiles_dict[perc].values()))],
+            'o', color=color)
 
     return line
 
 
-def plot_all(first_all_data, second_all_data, output_file = None):
-
+def plot_all(first_all_data, second_all_data, output_file=None):
     _name_checker(first_all_data, second_all_data)
 
     fig, axes = plt.subplots(nrows=len(PERCENTILES_SET), ncols=1)
@@ -341,18 +344,18 @@ def plot_all(first_all_data, second_all_data, output_file = None):
     second_lines = []
     for curr in range(len(PERCENTILES_SET)):
         line = plot_percentile_distr(axes[curr], first_all_data['distributions_dict'][0],
-                              first_all_data['cleared_percentiles_dict'], PERCENTILES_SET[curr],
-                              color = 'r')
+                                     first_all_data['cleared_percentiles_dict'], PERCENTILES_SET[curr],
+                                     color='r')
         first_lines.append(line)
         line = plot_percentile_distr(axes[curr], second_all_data['distributions_dict'][0],
-                              second_all_data['cleared_percentiles_dict'], PERCENTILES_SET[curr],
-                              color = 'g')
+                                     second_all_data['cleared_percentiles_dict'], PERCENTILES_SET[curr],
+                                     color='g')
         second_lines.append(line)
         axes[curr].set_xlabel('Perc : {0}'.format(PERCENTILES_SET[curr]))
 
     red_patch = mpatches.Patch(color='red', label=first_all_data['build_name'])
     green_patch = mpatches.Patch(color='green', label=second_all_data['build_name'])
-    axes[0].legend(handles=[red_patch,green_patch],prop={'size':10})
+    axes[0].legend(handles=[red_patch, green_patch], prop={'size': 10})
 
     if output_file:
         fig.savefig(output_file)
@@ -361,11 +364,13 @@ def plot_all(first_all_data, second_all_data, output_file = None):
 
 
 if __name__ == "__main__":
-    
+
     args = parse_args()
 
     PLOT = args.plot
     VERBOUSE = args.verbouse
+    OUTLIERS_TREASHOLD = args.outliers_treashold
+
     if not args.percentiles_set is None:
         PERCENTILES_SET = args.percentiles_set
 
@@ -373,10 +378,11 @@ if __name__ == "__main__":
         first_all_data = whole_cycle(args, args.input_folders[0], args.builds_names[0])
         second_all_data = whole_cycle(args, args.input_folders[1], args.builds_names[1])
 
-        ks_test_resuts = ks_tests(first_all_data['cleared_percentiles_dict'], second_all_data['cleared_percentiles_dict'])
+        ks_test_resuts = ks_tests(first_all_data['cleared_percentiles_dict'],
+                                  second_all_data['cleared_percentiles_dict'])
 
         if VERBOUSE >= 1:
-           print_results(first_all_data, second_all_data, ks_test_resuts, None)
+            print_results(first_all_data, second_all_data, ks_test_resuts, None)
 
         print_results(first_all_data, second_all_data, ks_test_resuts, args.output_file)
 
