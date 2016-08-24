@@ -76,3 +76,16 @@ Max=59679
 of the events corresponding to this X value at the second. Also anything separated with "," can be aded to the end of each line. 
 In this example first number is latency, second is amount of request with this latency.
 
+=======================================================================================================================================
+
+USAGE OF SummarizeHistogramLogRange.jar:
+
+java -jar ./SummarizeHistogramLogRange.jar -s $start_time -e $end_time -ip $path -if $fullname -v -of $out_path$new_name.rd
+
+-s hdrh start time
+-e hdrh end time
+-ip input folder
+-if input file
+-v adds verbousity
+-of output file name with path
+
