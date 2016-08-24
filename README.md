@@ -2,7 +2,7 @@ comparer.py is a script, used to compare noisy distributions by their percentile
 For any questions please write: anton.rykachevskiy@yandex.ru
 
 REQUIRMENTS:
-Requirments are listed in requirments file. Python 2.7 is strongly recommended. 
+Requirments are listed in requirments file in the base directory. Python 2.7 is strongly recommended. 
 Also it can be more convinient to setup anaconda python https://www.continuum.io/downloads this 
 build contains everything to run and develop the script. 
 
