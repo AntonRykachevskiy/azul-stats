@@ -198,13 +198,15 @@ def drop_single_outliers(target_percentile_dict, treashold=1):
         mean = np.mean(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
         std = np.std(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
 
-        interval = stats.norm.interval(treashold / 2.0 + 1 / 2.0, mean, std)
+        interval = stats.norm.interval(treashold, mean, std)
 
         if target_percentile_dict[run_name] >= interval[0] and target_percentile_dict[run_name] <= interval[1]:
             cleared_percentiles_dict[run_name] = target_percentile_dict[run_name]
         else:
             dropped_percentiles_dict[run_name] = target_percentile_dict[run_name]
 
+    if cleared_percentiles_dict == {}:
+        raise ValueError('Treashold is too strong, so non of the percentile values fulfil it. Try to increase -ot')
     return cleared_percentiles_dict, dropped_percentiles_dict
 
 
@@ -357,7 +359,7 @@ def plot_all(first_all_data, second_all_data, output_file=None):
     green_patch = mpatches.Patch(color='green', label=second_all_data['build_name'])
     axes[0].legend(handles=[red_patch, green_patch], prop={'size': 10})
 
-    if output_file:
+    if not output_file is None:
         fig.savefig(output_file)
     else:
         plt.show()
@@ -387,4 +389,7 @@ if __name__ == "__main__":
         print_results(first_all_data, second_all_data, ks_test_resuts, args.output_file)
 
         if PLOT:
+            plot_all(first_all_data, second_all_data, None)
+
+        if args.output_image:
             plot_all(first_all_data, second_all_data, args.output_image)
