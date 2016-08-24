@@ -24,7 +24,7 @@ HEADER_SIZE = 12
 
 
 def parse_args(input_string=None):
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Superscript.')
 
     parser.add_argument('-if',
                         nargs=2,
@@ -48,7 +48,7 @@ def parse_args(input_string=None):
                         type=int,
                         default=1,
                         help='Verbousity level, should be 0, 1, 2, 3,'
-                             ' where 0 is for no information and 2 is all posible information.')
+                             ' where 0 is for no information and 3 is all posible information.')
 
     parser.add_argument('-ot',
                         dest='outliers_treashold',
@@ -194,9 +194,11 @@ def drop_single_outliers(target_percentile_dict, treashold=1):
     cleared_percentiles_dict = dict()
     dropped_percentiles_dict = dict()
 
+    mean = np.mean(target_percentile_dict.values())
+    std =np.std(target_percentile_dict.values())
     for run_name in target_percentile_dict:
-        mean = np.mean(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
-        std = np.std(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
+        #mean = np.mean(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
+        #std = np.std(filter(lambda x: x != target_percentile_dict[run_name], target_percentile_dict.values()))
 
         interval = stats.norm.interval(treashold, mean, std)
 
@@ -283,7 +285,7 @@ def print_results(first_all_data,
                                                   second_all_data['distributions_dict'][0][perc].std())
         print "Probability of being drown from different distr.: {0}".format(1 - ks_tests_dict[perc][1])
         if VERBOUSE >= 2:
-            print "\n"
+            print ""
             print "number of data points to compare: {0}, {1}".format(
                 len(first_all_data['cleared_percentiles_dict'][perc].values()),
                 len(second_all_data['cleared_percentiles_dict'][perc].values()))
