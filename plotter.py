@@ -87,7 +87,6 @@ def plot_all(all_data, axes_limits=None, output_image=None):
     if axes_limits == 'auto':
         x_max = COEFFICIENT * min(map(lambda x : percentiles_from_pdf(x, MAX_PERCENTILE) , np.hstack(pdfs.values() for pdfs in all_data.values())))
         y_max = COEFFICIENT * (max(np.hstack(np.hstack(pdfs.values() for pdfs in all_data.values()))))
-        print x_max
         axes_limits = [0, x_max, 0, y_max]
     elif not axes_limits is None:
         axes_limits = axes_limits
@@ -107,7 +106,8 @@ def plot_all(all_data, axes_limits=None, output_image=None):
 
     ax.legend(handles=patches, prop={'size': 10})
 
-    ax.
+    ax.set_xlabel('Latency, microseconds')
+    ax.set_ylabel('Percentage')
     if output_image is None:
         plt.show()
     else:
